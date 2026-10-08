@@ -17,8 +17,8 @@ st.caption("Permanent, Free 24/7 Generative AI Studio")
 # Fetch Token securely
 HF_TOKEN = st.secrets.get("HF_TOKEN", os.getenv("HF_TOKEN", ""))
 
-# Hugging Face Free Inference API Endpoint
-API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
+# Updated Hugging Face Router URL
+API_URL = "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell"
 headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
 col1, col2 = st.columns([1, 1])
