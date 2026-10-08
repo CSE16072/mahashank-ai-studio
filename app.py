@@ -2,7 +2,7 @@ import os
 import streamlit as st
 import replicate
 
-# Streamlit Page Setup
+# Page Configuration
 st.set_page_config(
     page_title="Mahashank AI Studio",
     page_icon="🎨",
@@ -12,7 +12,7 @@ st.set_page_config(
 st.title("🎨 Mahashank Design & Technology AI Generator")
 st.caption("High-Definition (1024x1024) Generative AI Studio")
 
-# Fetch Replicate API Token securely from secrets
+# Fetch API token
 REPLICATE_API_TOKEN = st.secrets.get("REPLICATE_API_TOKEN", os.getenv("REPLICATE_API_TOKEN", ""))
 
 col1, col2 = st.columns([1, 1])
@@ -35,22 +35,26 @@ with col2:
         else:
             with st.spinner("⚡ Generating high-definition design with SDXL-Lightning..."):
                 try:
+                    # Set token in environment explicitly
+                    os.environ["REPLICATE_API_TOKEN"] = REPLICATE_API_TOKEN
+                    
                     enhanced_prompt = f"{prompt}, high definition, 8k resolution, crisp commercial texture, professional studio lighting, Mahashank design aesthetic"
                     
-                    # Run 4-step SDXL-Lightning via API
+                    # Call standard model slug directly without hash string
                     output = replicate.run(
-                        "bytedance/sdxl-lightning-4step:5579f57372338770025516b31c30248384282a54e954546c24389146197fa37c",
+                        "bytedance/sdxl-lightning-4step",
                         input={
                             "prompt": enhanced_prompt,
                             "negative_prompt": negative_prompt,
                             "width": 1024,
                             "height": 1024,
-                            "num_inference_steps": 4,
-                            "guidance_scale": 0
+                            "scheduler": "K_EULER",
+                            "num_inference_steps": 4
                         }
                     )
                     
-                    image_url = output[0]
+                    # Handle response
+                    image_url = output[0] if isinstance(output, list) else str(output)
                     st.image(image_url, caption="Generated 1024x1024 Output", use_container_width=True)
                     st.markdown(f"[⬇️ Download Full-Res HD Image]({image_url})")
                     st.success("Generation Complete!")
