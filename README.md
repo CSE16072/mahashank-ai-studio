@@ -1,4 +1,4 @@
-# 🎨 [Mahashank AI Studio](https://your-app-name.streamlit.app)
+# 🎨 Mahashank AI Studio
 
 > **Built by Mahashank Design and Technology Company**
 
