@@ -18,32 +18,38 @@ st.caption("Permanent, Free 24/7 Generative AI Studio")
 # Fetch Token securely from Streamlit Secrets
 HF_TOKEN = st.secrets.get("HF_TOKEN", os.getenv("HF_TOKEN", ""))
 
-# Working Hugging Face Endpoint
-API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
+# Primary and Fallback Endpoints for Free Serverless Inference
+ENDPOINTS = [
+    "https://router.huggingface.co/models/stabilityai/stable-diffusion-3.5-large",
+    "https://router.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
+]
+
 headers = {
     "Authorization": f"Bearer {HF_TOKEN}",
     "Content-Type": "application/json"
 }
 
-def query_huggingface(payload, retries=5, delay=8):
-    """Queries HF API with automatic retry for 503 model-loading states."""
-    for attempt in range(retries):
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=120)
-        
-        # Success
-        if response.status_code == 200:
-            return response, None
-        
-        # Model is cold-starting / loading on Hugging Face servers
-        if response.status_code == 503:
-            st.warning(f"⏳ Model is warming up on Hugging Face servers... Retrying ({attempt + 1}/{retries})...")
-            time.sleep(delay)
-            continue
-            
-        # Other errors
-        return None, f"Error {response.status_code}: {response.text}"
-        
-    return None, "Model loading timed out. Please click 'Generate HD Image' again in a few seconds."
+def query_huggingface(payload, retries=3, delay=6):
+    """Queries HF API using router endpoints with warm-up retry handling."""
+    for api_url in ENDPOINTS:
+        for attempt in range(retries):
+            try:
+                response = requests.post(api_url, headers=headers, json=payload, timeout=90)
+                
+                # Success
+                if response.status_code == 200:
+                    return response.content, None
+                
+                # Cold start (Model loading)
+                if response.status_code == 503:
+                    st.warning(f"⏳ Model warming up... Retrying attempt {attempt + 1}/{retries}...")
+                    time.sleep(delay)
+                    continue
+                    
+            except requests.exceptions.RequestException:
+                break # Move to fallback endpoint if DNS/Connection fails
+                
+    return None, "Server response delayed. Please click 'Generate HD Image' again in a few seconds."
 
 col1, col2 = st.columns([1, 1])
 
@@ -63,12 +69,11 @@ with col2:
                 try:
                     enhanced_prompt = f"{prompt}, high definition, 8k resolution, crisp commercial texture, professional studio lighting, Mahashank design aesthetic"
                     
-                    response, err = query_huggingface({"inputs": enhanced_prompt})
+                    image_bytes, err = query_huggingface({"inputs": enhanced_prompt})
                     
                     if err:
                         st.error(err)
                     else:
-                        image_bytes = response.content
                         image = Image.open(io.BytesIO(image_bytes))
                         
                         st.image(image, caption="Generated Output", use_container_width=True)
