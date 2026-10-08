@@ -1,6 +1,8 @@
 # 🎨 [Mahashank AI Studio](https://your-app-name.streamlit.app)
 
-A lightweight, permanent, and 24/7 high-definition generative AI web application built for **Mahashank Design and Technology Company**. Powered by **Streamlit** and running on **Cloudflare Workers AI** using the state-of-the-art `@cf/black-forest-labs/flux-1-schnell` model via REST API.
+> **Built by Mahashank Design and Technology Company**
+
+A lightweight, permanent, and 24/7 high-definition generative AI web application engineered for commercial product mockups, saree portraits, and photorealistic human renders. Powered by **Streamlit** and running on **Cloudflare Workers AI** using the state-of-the-art `@cf/black-forest-labs/flux-1-schnell` model via REST API.
 
 ---
 
