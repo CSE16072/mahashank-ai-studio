@@ -31,20 +31,20 @@ with col2:
         if not HF_TOKEN:
             st.error("⚠️ HF_TOKEN is missing. Please add your free token in Streamlit Secrets.")
         else:
-            with st.spinner("⚡ Waking up AI model and generating design (takes ~15–20s)..."):
+            with st.spinner("⚡ Generating high-definition design..."):
                 try:
-                    # Initialize Hugging Face InferenceClient cleanly
-                    client = InferenceClient(token=HF_TOKEN)
+                    # Initialize client targeting free HF native inference
+                    client = InferenceClient(api_key=HF_TOKEN)
                     
                     enhanced_prompt = f"{prompt}, high definition, 8k resolution, crisp commercial texture, professional studio lighting, Mahashank design aesthetic"
                     
-                    # Call Stable Diffusion 3.5 Large (Free serverless)
+                    # Generate via SDXL Base 1.0 (Completely Free on HF serverless)
                     image = client.text_to_image(
                         enhanced_prompt,
-                        model="stabilityai/stable-diffusion-3.5-large"
+                        model="stabilityai/stable-diffusion-xl-base-1.0"
                     )
                     
-                    # Convert PIL image to bytes for download button
+                    # Convert PIL image to bytes for download
                     buf = io.BytesIO()
                     image.save(buf, format="PNG")
                     image_bytes = buf.getvalue()
