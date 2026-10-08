@@ -12,7 +12,7 @@ st.set_page_config(
 st.title("🎨 Mahashank Design & Technology AI Generator")
 st.caption("High-Definition (1024x1024) Generative AI Studio")
 
-# Fetch API token securely from Streamlit secrets
+# Retrieve Replicate API Token securely
 REPLICATE_API_TOKEN = st.secrets.get("REPLICATE_API_TOKEN", os.getenv("REPLICATE_API_TOKEN", ""))
 
 col1, col2 = st.columns([1, 1])
@@ -35,13 +35,13 @@ with col2:
         else:
             with st.spinner("⚡ Generating high-definition design with SDXL-Lightning..."):
                 try:
-                    # Pass token to environment for Replicate client
+                    # Explicitly attach token to runtime environment
                     os.environ["REPLICATE_API_TOKEN"] = REPLICATE_API_TOKEN
                     
                     enhanced_prompt = f"{prompt}, high definition, 8k resolution, crisp commercial texture, professional studio lighting, Mahashank design aesthetic"
                     
-                    # Full model identifier with active version hash
-                    model_version = "bytedance/sdxl-lightning-4step:5579f57372338770025516b31c30248384282a54e954546c24389146197fa37c"
+                    # Correct active version hash for SDXL-Lightning 4-step
+                    model_version = "bytedance/sdxl-lightning-4step:5599ed30703defd1d160a25a63321b4dec97101d98b4674bcc56e41f62f35637"
                     
                     output = replicate.run(
                         model_version,
@@ -55,7 +55,7 @@ with col2:
                         }
                     )
                     
-                    # Parse image output URL
+                    # Extract single or array image output URL
                     if isinstance(output, list) and len(output) > 0:
                         image_url = str(output[0])
                     else:
