@@ -22,5 +22,5 @@ Ensure you have **Python 3.9+** installed on your machine.
 
 ### 2. Clone the Repository
 ```bash
-git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
-cd your-repo-name
+git clone [https://github.com/CSE16072/mahashank-ai-studio.git](https://github.com/CSE16072/mahashank-ai-studio.git)
+cd mahashank-ai-studio
