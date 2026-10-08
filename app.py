@@ -1,5 +1,6 @@
 import os
 import io
+import time
 import requests
 import streamlit as st
 from PIL import Image
@@ -14,12 +15,35 @@ st.set_page_config(
 st.title("🎨 Mahashank Design & Technology AI Generator")
 st.caption("Permanent, Free 24/7 Generative AI Studio")
 
-# Fetch Token securely
+# Fetch Token securely from Streamlit Secrets
 HF_TOKEN = st.secrets.get("HF_TOKEN", os.getenv("HF_TOKEN", ""))
 
-# Updated Hugging Face Router URL
-API_URL = "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell"
-headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+# Modern Serverless Router Endpoint
+API_URL = "https://router.huggingface.co/models/stabilityai/stable-diffusion-3.5-large"
+headers = {
+    "Authorization": f"Bearer {HF_TOKEN}",
+    "Content-Type": "application/json"
+}
+
+def query_huggingface(payload, retries=5, delay=10):
+    """Queries HF API with automatic retry for 503 model-loading states."""
+    for attempt in range(retries):
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=120)
+        
+        # Success
+        if response.status_code == 200:
+            return response, None
+        
+        # Model is cold-starting / loading
+        if response.status_code == 503:
+            st.warning(f"⏳ Model is warming up on Hugging Face servers... Retrying ({attempt + 1}/{retries})...")
+            time.sleep(delay)
+            continue
+            
+        # Other errors
+        return None, f"Error {response.status_code}: {response.text}"
+        
+    return None, "Model loading timed out. Please click 'Generate HD Image' again in a few seconds."
 
 col1, col2 = st.columns([1, 1])
 
@@ -35,24 +59,20 @@ with col2:
         if not HF_TOKEN:
             st.error("⚠️ HF_TOKEN is missing. Please add your free token in Streamlit Secrets.")
         else:
-            with st.spinner("⚡ Generating design via Hugging Face Free API (takes ~10–15s)..."):
+            with st.spinner("⚡ Generating high-definition design..."):
                 try:
                     enhanced_prompt = f"{prompt}, high definition, 8k resolution, crisp commercial texture, professional studio lighting, Mahashank design aesthetic"
                     
-                    response = requests.post(
-                        API_URL,
-                        headers=headers,
-                        json={"inputs": enhanced_prompt},
-                        timeout=60
-                    )
+                    response, err = query_huggingface({"inputs": enhanced_prompt})
                     
-                    if response.status_code == 200:
+                    if err:
+                        st.error(err)
+                    else:
                         image_bytes = response.content
                         image = Image.open(io.BytesIO(image_bytes))
                         
-                        st.image(image, caption="Generated Output", use_container_width=True)
+                        st.image(image, caption="Generated Output (1024x1024)", use_container_width=True)
                         
-                        # Direct Download Button
                         st.download_button(
                             label="⬇️ Download Full-Res Image",
                             data=image_bytes,
@@ -60,8 +80,6 @@ with col2:
                             mime="image/png"
                         )
                         st.success("Generation Complete!")
-                    else:
-                        st.error(f"Generation Error ({response.status_code}): {response.text}")
                         
                 except Exception as e:
                     st.error(f"Generation failed: {str(e)}")
