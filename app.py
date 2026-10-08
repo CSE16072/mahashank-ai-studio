@@ -1,6 +1,6 @@
 import os
 import streamlit as st
-import replicate
+import fal_client
 
 # Page Setup
 st.set_page_config(
@@ -12,8 +12,8 @@ st.set_page_config(
 st.title("🎨 Mahashank Design & Technology AI Generator")
 st.caption("High-Definition (1024x1024) Generative AI Studio")
 
-# Retrieve Replicate API Token securely
-REPLICATE_API_TOKEN = st.secrets.get("REPLICATE_API_TOKEN", os.getenv("REPLICATE_API_TOKEN", ""))
+# Fetch API Key securely
+FAL_KEY = st.secrets.get("FAL_KEY", os.getenv("FAL_KEY", ""))
 
 col1, col2 = st.columns([1, 1])
 
@@ -30,36 +30,27 @@ with col1:
 
 with col2:
     if generate_btn and prompt:
-        if not REPLICATE_API_TOKEN:
-            st.error("⚠️ API Token missing. Please add REPLICATE_API_TOKEN to Streamlit Secrets.")
+        if not FAL_KEY:
+            st.error("⚠️ FAL_KEY is missing. Please add FAL_KEY in Streamlit Secrets.")
         else:
             with st.spinner("⚡ Generating high-definition design with SDXL-Lightning..."):
                 try:
-                    # Explicitly attach token to runtime environment
-                    os.environ["REPLICATE_API_TOKEN"] = REPLICATE_API_TOKEN
+                    os.environ["FAL_KEY"] = FAL_KEY
                     
                     enhanced_prompt = f"{prompt}, high definition, 8k resolution, crisp commercial texture, professional studio lighting, Mahashank design aesthetic"
                     
-                    # Correct active version hash for SDXL-Lightning 4-step
-                    model_version = "bytedance/sdxl-lightning-4step:5599ed30703defd1d160a25a63321b4dec97101d98b4674bcc56e41f62f35637"
-                    
-                    output = replicate.run(
-                        model_version,
-                        input={
+                    result = fal_client.subscribe(
+                        "fal-ai/fast-sdxl",
+                        arguments={
                             "prompt": enhanced_prompt,
                             "negative_prompt": negative_prompt,
-                            "width": 1024,
-                            "height": 1024,
+                            "image_size": "square_hd",
                             "num_inference_steps": 4,
-                            "guidance_scale": 0
+                            "guidance_scale": 1.0
                         }
                     )
                     
-                    # Extract single or array image output URL
-                    if isinstance(output, list) and len(output) > 0:
-                        image_url = str(output[0])
-                    else:
-                        image_url = str(output)
+                    image_url = result["images"][0]["url"]
 
                     st.image(image_url, caption="Generated 1024x1024 Output", use_container_width=True)
                     st.markdown(f"[⬇️ Download Full-Res HD Image]({image_url})")
