@@ -18,14 +18,14 @@ st.caption("Permanent, Free 24/7 Generative AI Studio")
 # Fetch Token securely from Streamlit Secrets
 HF_TOKEN = st.secrets.get("HF_TOKEN", os.getenv("HF_TOKEN", ""))
 
-# Modern Serverless Router Endpoint
-API_URL = "https://router.huggingface.co/models/stabilityai/stable-diffusion-3.5-large"
+# Working Hugging Face Endpoint
+API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
 headers = {
     "Authorization": f"Bearer {HF_TOKEN}",
     "Content-Type": "application/json"
 }
 
-def query_huggingface(payload, retries=5, delay=10):
+def query_huggingface(payload, retries=5, delay=8):
     """Queries HF API with automatic retry for 503 model-loading states."""
     for attempt in range(retries):
         response = requests.post(API_URL, headers=headers, json=payload, timeout=120)
@@ -34,7 +34,7 @@ def query_huggingface(payload, retries=5, delay=10):
         if response.status_code == 200:
             return response, None
         
-        # Model is cold-starting / loading
+        # Model is cold-starting / loading on Hugging Face servers
         if response.status_code == 503:
             st.warning(f"⏳ Model is warming up on Hugging Face servers... Retrying ({attempt + 1}/{retries})...")
             time.sleep(delay)
@@ -71,7 +71,7 @@ with col2:
                         image_bytes = response.content
                         image = Image.open(io.BytesIO(image_bytes))
                         
-                        st.image(image, caption="Generated Output (1024x1024)", use_container_width=True)
+                        st.image(image, caption="Generated Output", use_container_width=True)
                         
                         st.download_button(
                             label="⬇️ Download Full-Res Image",
